@@ -55,7 +55,6 @@ app.post("/message", async (req, res) => {
       from: `${FROM_NAME}<${FROM_USER}>`,
       to: `${TO_USER}`,
       subject: "RCCG Monthly Prayer",
-      text: "hello from harrison using gmail API",
       html: input,
     };
     let info = await transport
