@@ -64,6 +64,7 @@ app.post("/message", async (req, res) => {
       })
       .catch((err) => {
         console.log(`Error occured:`, err);
+        return res.json(err);
       });
   } catch (error) {
     return error;
