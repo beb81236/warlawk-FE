@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 2000;
 const path = require("path");
 require("dotenv").config();
 var nodemailer = require("nodemailer");
@@ -11,24 +11,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const CLIENT_ID = process.env.CLIENT_ID;
-const ClIENT_SECRET = process.env.ClIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI;
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
-const FROM_USER = process.env.FROM_USER;
-const TO_USER = process.env.TO_USER;
-const FROM_NAME = process.env.FROM_NAME;
-
-const oAuth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  ClIENT_SECRET,
-  REDIRECT_URI
-);
-
-oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+let APP_NAME = process.env.APP_NAME;
+let email_server = process.env.email_server;
+let email_address = process.env.email_address;
+let email_password = process.env.email_password;
+let receiver_email = process.env.receiver_email;
 
 app.post("/message", async (req, res) => {
-  //    console.log(req)
+  console.log(req.body);
   const input = `
     <p> You have a messgae</p>
     <h3> Contact Details</h3>
@@ -38,28 +28,29 @@ app.post("/message", async (req, res) => {
     </ul>
     `;
   try {
-    const accessToken = await oAuth2Client.getAccessToken();
-    const transport = nodemailer.createTransport({
-      service: "gmail",
+    // create reusable transporter object using the default SMTP transport
+    let Transporter = nodemailer.createTransport({
+      service: email_server,
+      host: email_server,
+      port: 587,
+      secure: false,
+
       auth: {
-        type: "OAuth2",
-        user: `${FROM_USER}`,
-        clientId: CLIENT_ID,
-        clientSecret: ClIENT_SECRET,
-        refreshToken: REFRESH_TOKEN,
-        accessToken: accessToken,
+        user: email_address,
+        pass: email_password,
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     });
 
     const message = {
-      from: `${FROM_NAME}<${FROM_USER}>`,
-      to: `${TO_USER}`,
-      subject: "RCCG Monthly Prayer",
-      text: "hello from harrison using gmail API",
+      from: `"${APP_NAME}" <${email_address}>`,
+      to: receiver_email,
+      subject: `RCCG MONTHLY MESSAGE`,
       html: input,
     };
-    let info = await transport
-      .sendMail(message)
+    let info = await Transporter.sendMail(message)
       .then((res) => {
         console.log(`Email sent`);
       })
@@ -67,6 +58,7 @@ app.post("/message", async (req, res) => {
         console.log(`Error occured:`, err);
       });
   } catch (error) {
+    console.log(error);
     return error;
   }
 });
